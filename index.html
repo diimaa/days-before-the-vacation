@@ -30,18 +30,47 @@
             justify-content: center;
         }
 
+        .days-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.15em;
+        }
+
         .days {
-            font-size: 20vw;
+            font-size: 50vw;
             color: #ffffff;
             font-weight: 700;
-            line-height: 1;
+            line-height: 0.9;
             min-height: 1em;
+        }
+
+        .fraction {
+            font-size: 10vw;
+            color: #ffffff;
+            font-weight: 700;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            margin-top: 0.1em;
+            line-height: 1.1;
+        }
+
+        .fraction-numerator {
+            border-bottom: 0.08em solid #ffffff;
+            padding-bottom: 0.15em;
+            min-width: 1.2em;
+        }
+
+        .fraction-denominator {
+            padding-top: 0.15em;
+            min-width: 1.2em;
         }
 
         .label {
             color: #ffffff;
-            font-size: 1.67vw;
-            margin-top: 0.5em;
+            font-size: 2.5vw;
+            margin-top: 0.8em;
             font-weight: 400;
             letter-spacing: 0.05em;
         }
@@ -49,23 +78,53 @@
 </head>
 <body>
     <div class="container">
-        <div class="days" id="daysCount">0</div>
+        <div class="days-container">
+            <div class="days" id="daysCount">0</div>
+            <div class="fraction" id="fractionPart"></div>
+        </div>
         <div class="label">дней до отпуска</div>
     </div>
 
     <script>
+        function getFraction(now, targetDate) {
+            const msPerDay = 1000 * 60 * 60 * 24;
+            const diffTime = targetDate - now;
+            
+            if (diffTime <= 0) return null;
+            
+            const fractionalDay = (diffTime % msPerDay) / msPerDay;
+            
+            if (fractionalDay < 0.125) return null;
+            if (fractionalDay < 0.375) return { num: 1, den: 4 };
+            if (fractionalDay < 0.625) return { num: 1, den: 2 };
+            return { num: 3, den: 4 };
+        }
+
         function updateDays() {
             const targetDate = new Date('2026-03-21T13:00:00').getTime();
             const now = new Date().getTime();
             const diffTime = targetDate - now;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
             
             const daysElement = document.getElementById('daysCount');
-            daysElement.textContent = Math.max(0, diffDays);
+            const fractionElement = document.getElementById('fractionPart');
+            
+            const wholeDays = Math.max(0, diffDays);
+            daysElement.textContent = wholeDays;
+            
+            const fraction = getFraction(now, targetDate);
+            if (fraction && wholeDays > 0) {
+                fractionElement.innerHTML = `
+                    <div class="fraction-numerator">${fraction.num}</div>
+                    <div class="fraction-denominator">${fraction.den}</div>
+                `;
+            } else {
+                fractionElement.innerHTML = '';
+            }
         }
 
         updateDays();
-        setInterval(updateDays, 1000);
+        setInterval(updateDays, 60000);
     </script>
 </body>
 </html>
